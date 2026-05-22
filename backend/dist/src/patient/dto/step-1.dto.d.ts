@@ -7,7 +7,6 @@ export declare class CreateStep1Dto {
     extensionDepartamento?: string;
     fechaNacimiento: string;
     sexoBiologico: string;
-    genero?: string;
     estadoCivil?: string;
     ocupacion?: string;
     telefonoPrincipal: string;

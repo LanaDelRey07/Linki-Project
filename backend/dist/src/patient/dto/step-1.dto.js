@@ -20,7 +20,6 @@ class CreateStep1Dto {
     extensionDepartamento;
     fechaNacimiento;
     sexoBiologico;
-    genero;
     estadoCivil;
     ocupacion;
     telefonoPrincipal;
@@ -62,14 +61,9 @@ __decorate([
     __metadata("design:type", String)
 ], CreateStep1Dto.prototype, "fechaNacimiento", void 0);
 __decorate([
-    (0, class_validator_1.IsEnum)(['MASCULINO', 'FEMENINO', 'INTERSEXUAL']),
+    (0, class_validator_1.IsEnum)(['MASCULINO', 'FEMENINO']),
     __metadata("design:type", String)
 ], CreateStep1Dto.prototype, "sexoBiologico", void 0);
-__decorate([
-    (0, class_validator_1.IsOptional)(),
-    (0, class_validator_1.IsEnum)(['MASCULINO', 'FEMENINO', 'NO_BINARIO', 'PREFIERO_NO_DECIR']),
-    __metadata("design:type", String)
-], CreateStep1Dto.prototype, "genero", void 0);
 __decorate([
     (0, class_validator_1.IsOptional)(),
     (0, class_validator_1.IsEnum)(['SOLTERO', 'CASADO', 'UNION_LIBRE', 'DIVORCIADO', 'VIUDO']),
