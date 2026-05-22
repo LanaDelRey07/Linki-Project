@@ -1,0 +1,752 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================================
+// ENUMS
+// ============================================================
+
+enum UserRole {
+  PATIENT
+  DOCTOR
+  ADMIN
+}
+
+enum DocumentType {
+  CI
+  PASAPORTE
+  CARNET_EXTRANJERIA
+}
+
+enum Department {
+  LP
+  CB
+  SC
+  OR
+  PT
+  TJ
+  CH
+  BE
+  PA
+}
+
+enum SexBiological {
+  MASCULINO
+  FEMENINO
+  INTERSEXUAL
+}
+
+enum GenderIdentity {
+  MASCULINO
+  FEMENINO
+  NO_BINARIO
+  PREFIERO_NO_DECIR
+}
+
+enum MaritalStatus {
+  SOLTERO
+  CASADO
+  UNION_LIBRE
+  DIVORCIADO
+  VIUDO
+}
+
+enum Kinship {
+  PADRE
+  MADRE
+  CONYUGE
+  HIJO
+  HERMANO
+  OTRO
+}
+
+enum AllergyType {
+  MEDICAMENTOS
+  ALIMENTOS
+  AMBIENTALES
+  LATEX
+  OTRAS
+}
+
+enum ChronicConditionType {
+  DIABETES_TIPO_1
+  DIABETES_TIPO_2
+  HIPERTENSION
+  ASMA
+  HIPOTIROIDISMO
+  EPILEPSIA
+  CARDIOPATIA
+  OTRA
+}
+
+enum SmokingStatus {
+  NO
+  OCASIONAL
+  DIARIO
+  EX_FUMADOR
+}
+
+enum AlcoholConsumption {
+  NO
+  OCASIONAL
+  REGULAR
+  EX_BEBEDOR
+}
+
+enum PhysicalActivity {
+  SEDENTARIO
+  UNO_DOS_VECES
+  TRES_CINCO_VECES
+  DIARIO
+}
+
+enum ContraceptiveMethod {
+  NINGUNO
+  HORMONAL_ORAL
+  DIU
+  IMPLANTE
+  PRESERVATIVO
+  OTRO
+}
+
+enum PregnancyStatus {
+  SI
+  NO
+  NO_SE
+}
+
+enum BackgroundToggle {
+  SI
+  NO
+  NO_SE
+}
+
+enum FamilyRelation {
+  PADRE
+  MADRE
+  HERMANO
+}
+
+enum FamilyDisease {
+  DIABETES
+  HTA
+  CANCER
+  CARDIOPATIA
+  ACV
+  ENFERMEDAD_MENTAL
+  OTRA
+}
+
+enum AppointmentStatus {
+  PENDIENTE
+  CONFIRMADA
+  EN_CURSO
+  COMPLETADA
+  CANCELADA
+  NO_ASISTIO
+}
+
+enum SymptomDuration {
+  HOY
+  DIAS
+  SEMANAS
+  MESES
+  ANIOS
+  NO_APLICA
+}
+
+enum EncounterStatus {
+  DRAFT
+  CLOSED
+}
+
+enum DiagnosisType {
+  PRESUNTIVO
+  DEFINITIVO
+}
+
+enum BMIClassification {
+  BAJO_PESO
+  NORMAL
+  SOBREPESO
+  OBESIDAD_I
+  OBESIDAD_II
+  OBESIDAD_III
+}
+
+enum Presentation {
+  TABLETA
+  CAPSULA
+  JARABE
+  AMPOLLA
+  CREMA
+  GOTAS
+  SUSPENSION
+  OTRO
+}
+
+enum AdministrationRoute {
+  ORAL
+  INTRAMUSCULAR
+  INTRAVENOSA
+  TOPICA
+  SUBLINGUAL
+  INHALATORIA
+  RECTAL
+  OTRA
+}
+
+enum MedicationFrequency {
+  CADA_4H
+  CADA_6H
+  CADA_8H
+  CADA_12H
+  CADA_24H
+  DOSIS_UNICA
+  PRN
+  OTRA
+}
+
+enum FollowUpInterval {
+  UNA_SEMANA
+  DOS_SEMANAS
+  UN_MES
+  TRES_MESES
+  SEIS_MESES
+  A_DEMANDA
+}
+
+enum SystemReview {
+  CARDIOVASCULAR
+  RESPIRATORIO
+  GASTROINTESTINAL
+  NEUROLOGICO
+  MUSCULOESQUELETICO
+  GENITOURINARIO
+  PIEL
+  ENDOCRINO
+  PSIQUIATRICO
+}
+
+// ============================================================
+// IDENTITY LAYER
+// ============================================================
+
+model User {
+  id             String     @id @default(uuid())
+  email          String     @unique
+  passwordHash   String
+  emailVerifiedAt DateTime?
+  isActive       Boolean    @default(true)
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  roles          UserRoleAssignment[]
+  patientProfile PatientProfile?
+  doctorProfile DoctorProfile?
+  closedEncounters ClinicalEncounter[]
+  addendums      ClinicalAddendum[]
+
+  @@map("users")
+}
+
+model UserRoleAssignment {
+  id         String   @id @default(uuid())
+  userId     String
+  role       String
+  assignedAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, role])
+  @@map("user_roles")
+}
+
+// ============================================================
+// PATIENT PROFILE (Block A)
+// ============================================================
+
+model PatientProfile {
+  id                  String   @id @default(uuid())
+  userId              String   @unique
+  onboardingCompleted Boolean  @default(false)
+  currentStep         Int      @default(1)
+  completedSteps      Int[]    @default([])
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user                User                   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  identification      PatientIdentification?
+  emergencyContacts   EmergencyContact[]
+  background          PatientBackground?
+  backgroundVersions  PatientBackgroundVersion[]
+  appointments        Appointment[]
+  grantedAccess       PatientDoctorAccess[]
+
+  @@map("patient_profiles")
+}
+
+model PatientIdentification {
+  id                    String   @id @default(uuid())
+  patientProfileId      String   @unique
+  nombres               String
+  apellidoPaterno       String
+  apellidoMaterno       String?
+  tipoDocumento         DocumentType
+  numeroDocumento       String
+  extensionDepartamento Department?
+  fechaNacimiento       DateTime
+  sexoBiologico         SexBiological
+  genero                GenderIdentity?
+  estadoCivil           MaritalStatus?
+  ocupacion             String?
+  telefonoPrincipal     String
+  telefonoSecundario    String?
+  correoElectronico     String
+  direccion             String
+  ciudad                String
+  departamento          Department
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  patientProfile PatientProfile @relation(fields: [patientProfileId], references: [id], onDelete: Cascade)
+
+  @@unique([tipoDocumento, numeroDocumento])
+  @@map("patient_identification")
+}
+
+model EmergencyContact {
+  id               String   @id @default(uuid())
+  patientProfileId String
+  nombreCompleto   String
+  parentesco       Kinship
+  telefono         String
+  createdAt        DateTime @default(now())
+
+  patientProfile PatientProfile @relation(fields: [patientProfileId], references: [id], onDelete: Cascade)
+
+  @@map("emergency_contacts")
+}
+
+model PatientBackground {
+  id                       String         @id @default(uuid())
+  patientProfileId         String         @unique
+  tieneAlergias            BackgroundToggle
+  tieneEnfermedadesCronicas BackgroundToggle
+  tomaMedicamentos         Boolean        @default(false)
+  haSidoOperado            Boolean        @default(false)
+  haSidoHospitalizado      Boolean        @default(false)
+  tieneAntecedentesFamiliares Boolean     @default(false)
+  tabaquismo               SmokingStatus?
+  consumoAlcohol           AlcoholConsumption?
+  actividadFisica          PhysicalActivity?
+  consumeOtrasSustancias   Boolean        @default(false)
+  detalleOtrasSustancias   String?
+  actualmenteEmbarazada    PregnancyStatus?
+  gestas                   Int?
+  partos                   Int?
+  cesareas                 Int?
+  abortos                  Int?
+  fechaUltimaMenstruacion  DateTime?
+  metodoAnticonceptivo     ContraceptiveMethod?
+  otroMetodoAnticonceptivo String?
+  createdAt                DateTime       @default(now())
+  updatedAt                DateTime       @updatedAt
+
+  patientProfile      PatientProfile         @relation(fields: [patientProfileId], references: [id], onDelete: Cascade)
+  allergies           PatientAllergy[]
+  chronicConditions   PatientChronicCondition[]
+  medications         PatientMedication[]
+  surgeries           PatientSurgery[]
+  hospitalizations    PatientHospitalization[]
+  familyHistory       PatientFamilyHistory[]
+
+  @@map("patient_background")
+}
+
+model PatientAllergy {
+  id                 String     @id @default(uuid())
+  backgroundId      String
+  tipoAlergia       AllergyType
+  detalle           String
+  createdAt          DateTime   @default(now())
+
+  background PatientBackground @relation(fields: [backgroundId], references: [id], onDelete: Cascade)
+
+  @@map("patient_allergies")
+}
+
+model PatientChronicCondition {
+  id            String              @id @default(uuid())
+  backgroundId String
+  tipo          ChronicConditionType
+  detalleOtra   String?
+  createdAt     DateTime            @default(now())
+
+  background PatientBackground @relation(fields: [backgroundId], references: [id], onDelete: Cascade)
+
+  @@map("patient_chronic_conditions")
+}
+
+model PatientMedication {
+  id          String   @id @default(uuid())
+  backgroundId String
+  nombre      String
+  dosis       String
+  frecuencia  String?
+  createdAt   DateTime @default(now())
+
+  background PatientBackground @relation(fields: [backgroundId], references: [id], onDelete: Cascade)
+
+  @@map("patient_medications")
+}
+
+model PatientSurgery {
+  id             String   @id @default(uuid())
+  backgroundId   String
+  tipoCirugia    String
+  anoAproximado  Int?
+  createdAt      DateTime @default(now())
+
+  background PatientBackground @relation(fields: [backgroundId], references: [id], onDelete: Cascade)
+
+  @@map("patient_surgeries")
+}
+
+model PatientHospitalization {
+  id             String   @id @default(uuid())
+  backgroundId   String
+  motivo         String
+  anoAproximado  Int?
+  createdAt      DateTime @default(now())
+
+  background PatientBackground @relation(fields: [backgroundId], references: [id], onDelete: Cascade)
+
+  @@map("patient_hospitalizations")
+}
+
+model PatientFamilyHistory {
+  id            String       @id @default(uuid())
+  backgroundId String
+  parentesco   FamilyRelation
+  enfermedad   FamilyDisease
+  detalleOtra  String?
+  createdAt     DateTime     @default(now())
+
+  background PatientBackground @relation(fields: [backgroundId], references: [id], onDelete: Cascade)
+
+  @@map("patient_family_history")
+}
+
+// ============================================================
+// VERSIONING (Block A snapshots)
+// ============================================================
+
+model PatientBackgroundVersion {
+  id                String   @id @default(uuid())
+  patientProfileId  String
+  versionNumber     Int
+  snapshotData      Json     // Full Block A snapshot
+  changeDescription String?
+  changedFields     String[] // Array of field names that changed
+  changedAt         DateTime @default(now())
+
+patientProfile     PatientProfile @relation(fields: [patientProfileId], references: [id], onDelete: Cascade)
+  encounters         ClinicalEncounter[]
+
+  @@unique([patientProfileId, versionNumber])
+  @@map("patient_background_versions")
+}
+
+// ============================================================
+// DOCTOR PROFILE
+// ============================================================
+
+model DoctorProfile {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  nombres              String
+  apellidoPaterno      String
+  apellidoMaterno      String?
+  numeroRegistro      String   @unique
+  especialidadPrincipal String
+  especialidadSecundaria String?
+  departamento         Department
+  ciudad               String
+  direccionConsultorio String?
+  aceptaConsultaDomicilio Boolean @default(false)
+  aceptaTelemedicina   Boolean  @default(false)
+  activo               Boolean  @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  user          User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  appointments Appointment[]
+  accessGranted PatientDoctorAccess[]
+
+  @@map("doctor_profiles")
+}
+
+model MedicalSpecialty {
+  id          String  @id @default(uuid())
+  name        String  @unique
+  description String?
+  isActive    Boolean @default(true)
+
+  @@map("medical_specialties")
+}
+
+// ============================================================
+// APPOINTMENT (Block B)
+// ============================================================
+
+model Appointment {
+  id               String           @id @default(uuid())
+  patientProfileId String
+  doctorProfileId  String
+  fechaHora        DateTime
+  estado           AppointmentStatus @default(PENDIENTE)
+  motivoConsulta   String
+  tiempoMolestia   SymptomDuration?
+  notasAdicionales String?
+  createdAt       DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  patientProfile PatientProfile     @relation(fields: [patientProfileId], references: [id], onDelete: Cascade)
+  doctorProfile  DoctorProfile      @relation(fields: [doctorProfileId], references: [id])
+  encounter      ClinicalEncounter?
+
+  @@map("appointments")
+}
+
+// ============================================================
+// CLINICAL ENCOUNTER (Block C) — IMMUTABLE after CLOSE
+// ============================================================
+
+model ClinicalEncounter {
+  id                      String            @id @default(uuid())
+  appointmentId           String            @unique
+  backgroundVersionId     String?
+  status                  EncounterStatus   @default(DRAFT)
+  closedAt                DateTime?
+  closedById              String?
+
+  // C.1 Subjetivo (S)
+  motivoConsultaValidado  String
+  historiaEnfermedadActual String
+
+  // C.2 Objetivo (O) — Signos Vitales
+  presionArterialSistolica  Int?
+  presionArterialDiastolica Int?
+  frecuenciaCardiaca       Int?
+  frecuenciaRespiratoria   Int?
+  temperatura              Decimal?
+  saturacionOxigeno        Decimal?
+  peso                     Decimal?
+  talla                    Int?
+  imc                      Decimal?
+  imcClasificacion         BMIClassification?
+
+  // Examen Físico
+  examenFisicoGeneral     String
+  examenFisicoSegmentario String?
+
+  // C.3 Análisis (A)
+  tipoDiagnostico         DiagnosisType
+  observacionesDiagnosticas String?
+
+  // C.4 Plan (P)
+  indicacionesNoFarmacologicas String?
+  proximaCitaSugerida     FollowUpInterval?
+  notasInternas           String?
+
+  createdAt               DateTime          @default(now())
+  updatedAt               DateTime          @updatedAt
+
+  appointment    Appointment             @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  closedBy      User?                    @relation(fields: [closedById], references: [id])
+  backgroundVersion PatientBackgroundVersion? @relation(fields: [backgroundVersionId], references: [id])
+  diagnoses     EncounterDiagnosis[]
+  systemReviews EncounterSystemReview[]
+  prescriptions EncounterPrescription[]
+  labOrders     EncounterLabOrder[]
+  imagingOrders EncounterImagingOrder[]
+  referrals     EncounterReferral[]
+  addendums     ClinicalAddendum[]
+
+  @@map("clinical_encounters")
+}
+
+model ClinicalAddendum {
+  id             String   @id @default(uuid())
+  encounterId    String
+  autorId        String
+  motivoAclaracion String
+  contenido      String
+  createdAt      DateTime @default(now())
+
+  encounter ClinicalEncounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+  autor     User              @relation(fields: [autorId], references: [id])
+
+  @@map("clinical_addendums")
+}
+
+model EncounterDiagnosis {
+  id                   String  @id @default(uuid())
+  encounterId          String
+  cie10Code            String
+  esDiagnosticoPrincipal Boolean @default(false)
+
+  encounter    ClinicalEncounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+  cie10Entry   Cie10Code        @relation(fields: [cie10Code], references: [id])
+
+  @@unique([encounterId, cie10Code])
+  @@map("encounter_diagnoses")
+}
+
+model EncounterSystemReview {
+  id          String      @id @default(uuid())
+  encounterId String
+  sistema     SystemReview
+  detalle     String?
+
+  encounter ClinicalEncounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+
+  @@unique([encounterId, sistema])
+  @@map("encounter_system_reviews")
+}
+
+model EncounterPrescription {
+  id                   String           @id @default(uuid())
+  encounterId          String
+  medicamento          String
+  presentacion         Presentation
+  dosis                String
+  viaAdministracion    AdministrationRoute
+  frecuencia           MedicationFrequency
+  duracion             String
+  instruccionesEspeciales String?
+  createdAt            DateTime         @default(now())
+
+  encounter ClinicalEncounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+
+  @@map("encounter_prescriptions")
+}
+
+model EncounterLabOrder {
+  id          String   @id @default(uuid())
+  encounterId String
+  estudio     String
+  createdAt   DateTime @default(now())
+
+  encounter ClinicalEncounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+
+  @@map("encounter_lab_orders")
+}
+
+model EncounterImagingOrder {
+  id          String   @id @default(uuid())
+  encounterId String
+  estudio     String
+  createdAt   DateTime @default(now())
+
+  encounter ClinicalEncounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+
+  @@map("encounter_imaging_orders")
+}
+
+model EncounterReferral {
+  id                    String  @id @default(uuid())
+  encounterId           String
+  especialidadDestino   String
+  motivo                String?
+  createdAt             DateTime @default(now())
+
+  encounter ClinicalEncounter @relation(fields: [encounterId], references: [id], onDelete: Cascade)
+
+  @@map("encounter_referrals")
+}
+
+// ============================================================
+// CATALOGS
+// ============================================================
+
+model Cie10Code {
+  id            String  @id // CIE-10 code like E11, I10, J00
+  code          String  @unique
+  descriptionEs String
+  descriptionEn String?
+  category      String?
+  isActive      Boolean @default(true)
+  searchVector  Unsupported("tsvector")?
+
+  diagnoses EncounterDiagnosis[]
+
+  @@map("cie10_codes")
+}
+
+model MedicationsCatalog {
+  id                 String  @id @default(uuid())
+  nombreGenerico     String
+  nombreComercial    String?
+  presentacion       String?
+  viaAdministracion  String?
+  isActive           Boolean @default(true)
+  createdAt          DateTime @default(now())
+
+  @@map("medications_catalog")
+}
+
+model LabStudiesCatalog {
+  id        String  @id @default(uuid())
+  nombre    String
+  categoria String?
+  isActive  Boolean @default(true)
+
+  @@map("lab_studies_catalog")
+}
+
+model ImagingStudiesCatalog {
+  id        String  @id @default(uuid())
+  nombre    String
+  categoria String?
+  isActive  Boolean @default(true)
+
+  @@map("imaging_studies_catalog")
+}
+
+model BoliviaCity {
+  id           String     @id @default(uuid())
+  departamento Department
+  nombre       String
+  isActive     Boolean    @default(true)
+
+  @@unique([departamento, nombre])
+  @@map("bolivia_cities")
+}
+
+// ============================================================
+// ACCESS CONTROL
+// ============================================================
+
+model PatientDoctorAccess {
+  id                String   @id @default(uuid())
+  patientProfileId  String
+  doctorProfileId   String
+  grantedAt         DateTime @default(now())
+  revokedAt         DateTime?
+  grantedBy         String   @default("PATIENT") // PATIENT or SYSTEM
+  canViewBackground Boolean  @default(true)
+  canViewEncounters Boolean  @default(true)
+
+  patientProfile PatientProfile @relation(fields: [patientProfileId], references: [id], onDelete: Cascade)
+  doctorProfile  DoctorProfile  @relation(fields: [doctorProfileId], references: [id])
+
+  @@unique([patientProfileId, doctorProfileId])
+  @@map("patient_doctor_access")
+}

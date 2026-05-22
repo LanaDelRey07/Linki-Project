@@ -1,0 +1,26 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.specialties = void 0;
+exports.specialties = [
+    { name: 'Medicina General', description: 'Atención primaria y medicina interna general' },
+    { name: 'Medicina Interna', description: 'Diagnóstico y tratamiento de enfermedades del adulto' },
+    { name: 'Pediatría', description: 'Atención médica de niños y adolescentes' },
+    { name: 'Ginecología y Obstetricia', description: 'Salad reproductiva femenina y embarazo' },
+    { name: 'Cardiología', description: 'Enfermedades del corazón y sistema cardiovascular' },
+    { name: 'Dermatología', description: 'Enfermedades de la piel' },
+    { name: 'Neurología', description: 'Enfermedades del sistema nervioso' },
+    { name: 'Traumatología y Ortopedia', description: 'Lesiones del sistema musculoesquelético' },
+    { name: 'Oftalmología', description: 'Enfermedades de los ojos' },
+    { name: 'Otorrinolaringología', description: 'Enfermedades de oído, nariz y garganta' },
+    { name: 'Psiquiatría', description: 'Trastornos mentales y de la conducta' },
+    { name: 'Endocrinología', description: 'Enfermedades del sistema endocrino' },
+    { name: 'Neumología', description: 'Enfermedades del sistema respiratorio' },
+    { name: 'Gastroenterología', description: 'Enfermedades del sistema digestivo' },
+    { name: 'Nefrología', description: 'Enfermedades del riñón' },
+    { name: 'Urología', description: 'Enfermedades del sistema urinario masculino' },
+    { name: 'Oncología', description: 'Diagnóstico y tratamiento del cáncer' },
+    { name: 'Reumatología', description: 'Enfermedades reumáticas y autoinmunes' },
+    { name: 'Nutrición', description: 'Asesoramiento nutricional y dietético' },
+    { name: 'Psicología Clínica', description: 'Evaluación y terapia psicológica' },
+];
+//# sourceMappingURL=specialties.seed.js.map
