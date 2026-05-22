@@ -8,8 +8,18 @@
     "backend": {
       "root": "backend",
       "routePrefix": "/_/backend",
-      "framework": "nodejs",
-      "entrypoint": "src/main.ts"
+      "builds": [
+        {
+          "src": "backend/src/main.ts",
+          "use": "@vercel/node"
+        }
+      ],
+      "routes": [
+        {
+          "src": "/_\\/backend/(.*)",
+          "dest": "backend/src/main.ts"
+        }
+      ]
     }
   }
 }
