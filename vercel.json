@@ -14,11 +14,7 @@
   },
   "functions": {
     "backend/src/main.ts": {
-      "includeFiles": [
-        "backend/node_modules/.prisma/**",
-        "backend/node_modules/@prisma/client/**",
-        "backend/prisma/schema.prisma"
-      ]
+      "includeFiles": "backend/node_modules/.prisma/**"
     }
   }
 }
