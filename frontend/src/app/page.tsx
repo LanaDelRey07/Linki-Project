@@ -39,7 +39,7 @@ export default function Home() {
               Tu salud, <span className="text-teal-600">conectada</span>
             </h1>
             <p className="text-lg md:text-xl text-gray-600 max-w-2xl mx-auto mb-10">
-              Encuentra médicos cercanos, agenda citas y lleva tu historia clínica digital.
+              Registra y lleva tu historia clínica digital al siguiente nivel.
               Democratisando el acceso a la salud en Bolivia.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -70,7 +70,7 @@ export default function Home() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Registro Digital</h3>
                 <p className="text-gray-600 text-sm">Complete su información médica una vez y llévela a cualquier consulta</p>
               </div>
-              <div className="text-center p-6">
+              {/* <div className="text-center p-6">
                 <div className="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <img
                     src="/logo.png"
@@ -80,7 +80,7 @@ export default function Home() {
                 </div>
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Buscar Médicos</h3>
                 <p className="text-gray-600 text-sm">Encuentre especialistas y generales cerca de usted, sin derivaciones</p>
-              </div>
+              </div> */}
               <div className="text-center p-6">
                 <div className="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <img
