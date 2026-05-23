@@ -8,7 +8,7 @@ CREATE TYPE "DocumentType" AS ENUM ('CI', 'PASAPORTE', 'CARNET_EXTRANJERIA');
 CREATE TYPE "Department" AS ENUM ('LP', 'CB', 'SC', 'OR', 'PT', 'TJ', 'CH', 'BE', 'PA');
 
 -- CreateEnum
-CREATE TYPE "SexBiological" AS ENUM ('MASCULINO', 'FEMENINO', 'INTERSEXUAL');
+CREATE TYPE "SexBiological" AS ENUM ('MASCULINO', 'FEMENINO');
 
 
 -- CreateEnum

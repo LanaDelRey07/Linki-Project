@@ -8,6 +8,7 @@ import {
   IsArray,
   ValidateNested,
 } from 'class-validator';
+import { Transform } from 'class-transformer';
 
 export class CreateStep1Dto {
   @IsString()
@@ -27,6 +28,7 @@ export class CreateStep1Dto {
   numeroDocumento: string;
 
   @IsOptional()
+  @Transform(({ value }) => (value === '' ? undefined : value))
   @IsEnum(['LP', 'CB', 'SC', 'OR', 'PT', 'TJ', 'CH', 'BE', 'PA'])
   extensionDepartamento?: string;
 

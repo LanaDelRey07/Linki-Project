@@ -38,7 +38,6 @@ enum Department {
 enum SexBiological {
   MASCULINO
   FEMENINO
-  INTERSEXUAL
 }
 
 enum MaritalStatus {
