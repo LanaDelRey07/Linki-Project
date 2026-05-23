@@ -70,7 +70,7 @@ export default function Home() {
                 <h3 className="text-lg font-semibold text-gray-900 mb-2">Registro Digital</h3>
                 <p className="text-gray-600 text-sm">Complete su información médica una vez y llévela a cualquier consulta</p>
               </div>
-              {/* <div className="text-center p-6">
+              <div className="text-center p-6">
                 <div className="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <img
                     src="/logo.png"
@@ -78,9 +78,9 @@ export default function Home() {
                     className="w-7 h-7 object-contain"
                   />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">Buscar Médicos</h3>
-                <p className="text-gray-600 text-sm">Encuentre especialistas y generales cerca de usted, sin derivaciones</p>
-              </div> */}
+                <h3 className="text-lg font-semibold text-gray-900 mb-2">Acceso mucho más sencillo</h3>
+                <p className="text-gray-600 text-sm">Acceso directo a su historia clínica desde cualquier dispositivo</p>
+              </div>
               <div className="text-center p-6">
                 <div className="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                   <img
