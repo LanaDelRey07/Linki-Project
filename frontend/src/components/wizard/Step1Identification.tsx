@@ -19,7 +19,7 @@ const step1Schema = z.object({
   numeroDocumento: z.string().min(1, 'Ingrese el número de documento'),
   extensionDepartamento: z.string().optional(),
   fechaNacimiento: z.string().min(1, 'Fecha de nacimiento requerida'),
-  sexoBiologico: z.enum(['MASCULINO', 'FEMENINO', 'INTERSEXUAL']),
+  sexoBiologico: z.enum(['MASCULINO', 'FEMENINO']),
   estadoCivil: z.string().optional(),
   ocupacion: z.string().optional(),
   telefonoPrincipal: z.string().min(6, 'Teléfono inválido'),
@@ -153,7 +153,6 @@ export default function Step1Identification({ onNext }: Step1Props) {
           options={[
             { value: 'MASCULINO', label: 'Masculino' },
             { value: 'FEMENINO', label: 'Femenino' },
-            { value: 'INTERSEXUAL', label: 'Intersexual' },
           ]}
         />
       </div>
