@@ -11,5 +11,14 @@
       "framework": "nestjs",
       "entrypoint": "src/main.ts"
     }
+  },
+  "functions": {
+    "backend/src/main.ts": {
+      "includeFiles": [
+        "backend/node_modules/.prisma/**",
+        "backend/node_modules/@prisma/client/**",
+        "backend/prisma/schema.prisma"
+      ]
+    }
   }
 }
