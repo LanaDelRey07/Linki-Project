@@ -20,25 +20,15 @@ export default function SuccessScreen() {
           ¡Registro completado!
         </h1>
         <p className="text-gray-600 mb-6">
-          Su historia clínica ha sido registrada exitosamente. Ahora puede buscar médicos y agendar citas.
+          Su registro fue recibido. Gracias por ayudarnos con la retroalimentación.
         </p>
-        <div className="space-y-3">
-          <Button
-            onClick={() => router.push('/dashboard')}
-            className="w-full"
-            size="lg"
-          >
-            Ir al Dashboard
-          </Button>
-          <Button
-            variant="secondary"
-            onClick={() => router.push('/dashboard/appointments')}
-            className="w-full"
-            size="lg"
-          >
-            Buscar Médico
-          </Button>
-        </div>
+        <Button
+          onClick={() => router.push('/')}
+          className="w-full"
+          size="lg"
+        >
+          Volver al inicio
+        </Button>
         <p className="mt-4 text-xs text-gray-400">
           Sus datos están protegidos conforme a la RM 0090/2008
         </p>

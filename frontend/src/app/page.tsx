@@ -18,12 +18,6 @@ export default function Home() {
             </div>
             <div className="flex items-center gap-4">
               <Link
-                href="/auth/login"
-                className="text-sm font-medium text-gray-600 hover:text-teal-600 transition-colors"
-              >
-                Iniciar Sesión
-              </Link>
-              <Link
                 href="/auth/register"
                 className="px-4 py-2 bg-teal-600 text-white rounded-lg text-sm font-medium hover:bg-teal-700 transition-colors"
               >
@@ -54,12 +48,6 @@ export default function Home() {
                 className="px-8 py-3 bg-teal-600 text-white rounded-xl text-lg font-semibold hover:bg-teal-700 transition-colors shadow-lg shadow-teal-200"
               >
                 Comenzar ahora
-              </Link>
-              <Link
-                href="/auth/login"
-                className="px-8 py-3 border-2 border-gray-200 text-gray-700 rounded-xl text-lg font-semibold hover:border-teal-300 hover:text-teal-700 transition-colors"
-              >
-                Ya tengo cuenta
               </Link>
             </div>
           </div>
