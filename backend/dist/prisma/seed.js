@@ -9,6 +9,38 @@ const specialties_seed_1 = require("./seed/specialties.seed");
 const prisma = new client_1.PrismaClient();
 async function main() {
     console.log('Seeding database...');
+    console.log('Clearing existing data...');
+    await prisma.$transaction([
+        prisma.encounterReferral.deleteMany(),
+        prisma.encounterImagingOrder.deleteMany(),
+        prisma.encounterLabOrder.deleteMany(),
+        prisma.encounterPrescription.deleteMany(),
+        prisma.encounterSystemReview.deleteMany(),
+        prisma.encounterDiagnosis.deleteMany(),
+        prisma.clinicalAddendum.deleteMany(),
+        prisma.clinicalEncounter.deleteMany(),
+        prisma.appointment.deleteMany(),
+        prisma.patientDoctorAccess.deleteMany(),
+        prisma.patientBackgroundVersion.deleteMany(),
+        prisma.patientFamilyHistory.deleteMany(),
+        prisma.patientHospitalization.deleteMany(),
+        prisma.patientSurgery.deleteMany(),
+        prisma.patientMedication.deleteMany(),
+        prisma.patientChronicCondition.deleteMany(),
+        prisma.patientAllergy.deleteMany(),
+        prisma.patientBackground.deleteMany(),
+        prisma.emergencyContact.deleteMany(),
+        prisma.patientIdentification.deleteMany(),
+        prisma.patientProfile.deleteMany(),
+        prisma.userRoleAssignment.deleteMany(),
+        prisma.user.deleteMany(),
+        prisma.medicationsCatalog.deleteMany(),
+        prisma.labStudiesCatalog.deleteMany(),
+        prisma.imagingStudiesCatalog.deleteMany(),
+        prisma.medicalSpecialty.deleteMany(),
+        prisma.boliviaCity.deleteMany(),
+        prisma.cie10Code.deleteMany(),
+    ]);
     console.log('Seeding CIE-10 codes...');
     for (const code of cie10_seed_1.cie10Codes) {
         await prisma.cie10Code.upsert({

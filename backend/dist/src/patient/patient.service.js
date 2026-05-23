@@ -55,17 +55,6 @@ let PatientService = class PatientService {
         if (dto.tipoDocumento === 'CI' && !dto.extensionDepartamento) {
             throw new common_1.BadRequestException('La extensión departamental es obligatoria para CI');
         }
-        const existing = await this.prisma.patientIdentification.findUnique({
-            where: { tipoDocumento_numeroDocumento: { tipoDocumento: dto.tipoDocumento, numeroDocumento: dto.numeroDocumento } },
-        });
-        if (existing) {
-            const existingProfile = await this.prisma.patientIdentification.findUnique({
-                where: { patientProfileId: profile.id },
-            });
-            if (existingProfile && existingProfile.id !== existing.id) {
-                throw new common_1.ConflictException('Este documento ya está registrado');
-            }
-        }
         const data = {
             patientProfileId: profile.id,
             nombres: dto.nombres,
@@ -85,10 +74,44 @@ let PatientService = class PatientService {
             ciudad: dto.ciudad,
             departamento: dto.departamento,
         };
-        const identification = await this.prisma.patientIdentification.upsert({
+        const existing = await this.prisma.patientIdentification.findUnique({
             where: { patientProfileId: profile.id },
-            update: data,
-            create: data,
+        });
+        if (existing) {
+            if (existing.tipoDocumento !== dto.tipoDocumento ||
+                existing.numeroDocumento !== dto.numeroDocumento) {
+                const duplicate = await this.prisma.patientIdentification.findUnique({
+                    where: {
+                        tipoDocumento_numeroDocumento: {
+                            tipoDocumento: dto.tipoDocumento,
+                            numeroDocumento: dto.numeroDocumento,
+                        },
+                    },
+                });
+                if (duplicate) {
+                    throw new common_1.ConflictException('Este documento ya está registrado');
+                }
+            }
+            const identification = await this.prisma.patientIdentification.update({
+                where: { patientProfileId: profile.id },
+                data,
+            });
+            await this.updateStepProgress(profile.id, 1);
+            return identification;
+        }
+        const duplicate = await this.prisma.patientIdentification.findUnique({
+            where: {
+                tipoDocumento_numeroDocumento: {
+                    tipoDocumento: dto.tipoDocumento,
+                    numeroDocumento: dto.numeroDocumento,
+                },
+            },
+        });
+        if (duplicate) {
+            throw new common_1.ConflictException('Este documento ya está registrado');
+        }
+        const identification = await this.prisma.patientIdentification.create({
+            data,
         });
         await this.updateStepProgress(profile.id, 1);
         return identification;

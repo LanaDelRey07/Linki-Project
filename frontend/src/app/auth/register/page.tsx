@@ -15,7 +15,7 @@ export default function RegisterPage() {
     email: '',
     password: '',
     confirmPassword: '',
-    role: 'PATIENT' as 'PATIENT' | 'DOCTOR',
+    role: 'PATIENT' as 'PATIENT',
   });
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -43,11 +43,7 @@ export default function RegisterPage() {
       localStorage.setItem('refresh_token', data.refreshToken);
       localStorage.setItem('user', JSON.stringify(data.user));
 
-      if (formData.role === 'PATIENT') {
-        router.push('/onboarding');
-      } else {
-        router.push('/dashboard');
-      }
+      router.push('/onboarding');
     } catch (err: any) {
       setError(err.response?.data?.message || 'Error al registrarse');
     } finally {
@@ -77,29 +73,8 @@ export default function RegisterPage() {
             </div>
           )}
 
-          <div className="flex gap-2">
-            <button
-              type="button"
-              onClick={() => setFormData({ ...formData, role: 'PATIENT' })}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                formData.role === 'PATIENT'
-                  ? 'bg-teal-600 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Paciente
-            </button>
-            <button
-              type="button"
-              onClick={() => setFormData({ ...formData, role: 'DOCTOR' })}
-              className={`flex-1 py-2.5 rounded-lg text-sm font-medium transition-all ${
-                formData.role === 'DOCTOR'
-                  ? 'bg-teal-600 text-white shadow-sm'
-                  : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-              }`}
-            >
-              Médico
-            </button>
+          <div className="text-sm font-medium text-gray-600 bg-gray-50 border border-gray-100 rounded-lg px-3 py-2">
+            Registro de paciente
           </div>
 
           <Input
@@ -132,10 +107,7 @@ export default function RegisterPage() {
           </Button>
 
           <p className="text-center text-sm text-gray-600">
-            ¿Ya tiene cuenta?{' '}
-            <Link href="/auth/login" className="text-teal-600 hover:text-teal-700 font-medium">
-              Iniciar sesión
-            </Link>
+            Registro solo para pacientes en esta prueba.
           </p>
         </form>
       </div>
