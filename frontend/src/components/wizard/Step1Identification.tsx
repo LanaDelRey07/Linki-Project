@@ -74,7 +74,7 @@ export default function Step1Identification({ onNext }: Step1Props) {
       <div>
         <h2 className="text-lg font-semibold text-gray-900 mb-1">Datos de Identificación</h2>
         <p className="text-sm text-gray-500">
-          Información personal according to RM 0090/2008
+          Información personal de acuerdo con la RM 0090/2008
         </p>
       </div>
 
