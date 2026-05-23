@@ -10,8 +10,6 @@ CREATE TYPE "Department" AS ENUM ('LP', 'CB', 'SC', 'OR', 'PT', 'TJ', 'CH', 'BE'
 -- CreateEnum
 CREATE TYPE "SexBiological" AS ENUM ('MASCULINO', 'FEMENINO', 'INTERSEXUAL');
 
--- CreateEnum
-CREATE TYPE "GenderIdentity" AS ENUM ('MASCULINO', 'FEMENINO', 'NO_BINARIO', 'PREFIERO_NO_DECIR');
 
 -- CreateEnum
 CREATE TYPE "MaritalStatus" AS ENUM ('SOLTERO', 'CASADO', 'UNION_LIBRE', 'DIVORCIADO', 'VIUDO');
@@ -127,7 +125,6 @@ CREATE TABLE "patient_identification" (
     "extensionDepartamento" "Department",
     "fechaNacimiento" TIMESTAMP(3) NOT NULL,
     "sexoBiologico" "SexBiological" NOT NULL,
-    "genero" "GenderIdentity",
     "estadoCivil" "MaritalStatus",
     "ocupacion" TEXT,
     "telefonoPrincipal" TEXT NOT NULL,

@@ -20,7 +20,6 @@ const step1Schema = z.object({
   extensionDepartamento: z.string().optional(),
   fechaNacimiento: z.string().min(1, 'Fecha de nacimiento requerida'),
   sexoBiologico: z.enum(['MASCULINO', 'FEMENINO', 'INTERSEXUAL']),
-  genero: z.string().optional(),
   estadoCivil: z.string().optional(),
   ocupacion: z.string().optional(),
   telefonoPrincipal: z.string().min(6, 'Teléfono inválido'),
@@ -159,31 +158,18 @@ export default function Step1Identification({ onNext }: Step1Props) {
         />
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <Select
-          label="Género (Identidad)"
-          {...register('genero')}
-          options={[
-            { value: 'MASCULINO', label: 'Masculino' },
-            { value: 'FEMENINO', label: 'Femenino' },
-            { value: 'NO_BINARIO', label: 'No binario' },
-            { value: 'PREFIERO_NO_DECIR', label: 'Prefiero no decir' },
-          ]}
-          placeholder="Seleccione..."
-        />
-        <Select
-          label="Estado Civil"
-          {...register('estadoCivil')}
-          options={[
-            { value: 'SOLTERO', label: 'Soltero/a' },
-            { value: 'CASADO', label: 'Casado/a' },
-            { value: 'UNION_LIBRE', label: 'Unión libre' },
-            { value: 'DIVORCIADO', label: 'Divorciado/a' },
-            { value: 'VIUDO', label: 'Viudo/a' },
-          ]}
-          placeholder="Seleccione..."
-        />
-      </div>
+      <Select
+        label="Estado Civil"
+        {...register('estadoCivil')}
+        options={[
+          { value: 'SOLTERO', label: 'Soltero/a' },
+          { value: 'CASADO', label: 'Casado/a' },
+          { value: 'UNION_LIBRE', label: 'Unión libre' },
+          { value: 'DIVORCIADO', label: 'Divorciado/a' },
+          { value: 'VIUDO', label: 'Viudo/a' },
+        ]}
+        placeholder="Seleccione..."
+      />
 
       <Input
         label="Ocupación"

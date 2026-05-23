@@ -36,10 +36,6 @@ export class CreateStep1Dto {
   @IsEnum(['MASCULINO', 'FEMENINO'])
   sexoBiologico: string;
 
-  // @IsOptional()
-  // @IsEnum(['MASCULINO', 'FEMENINO', 'NO_BINARIO', 'PREFIERO_NO_DECIR'])
-  // genero?: string;
-
   @IsOptional()
   @IsEnum(['SOLTERO', 'CASADO', 'UNION_LIBRE', 'DIVORCIADO', 'VIUDO'])
   estadoCivil?: string;

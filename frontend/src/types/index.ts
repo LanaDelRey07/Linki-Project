@@ -31,7 +31,6 @@ export interface PatientIdentification {
   extensionDepartamento?: string;
   fechaNacimiento: string;
   sexoBiologico: string;
-  genero?: string;
   estadoCivil?: string;
   ocupacion?: string;
   telefonoPrincipal: string;

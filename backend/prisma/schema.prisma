@@ -41,13 +41,6 @@ enum SexBiological {
   INTERSEXUAL
 }
 
-enum GenderIdentity {
-  MASCULINO
-  FEMENINO
-  NO_BINARIO
-  PREFIERO_NO_DECIR
-}
-
 enum MaritalStatus {
   SOLTERO
   CASADO
@@ -302,7 +295,6 @@ model PatientIdentification {
   extensionDepartamento Department?
   fechaNacimiento       DateTime
   sexoBiologico         SexBiological
-  genero                GenderIdentity?
   estadoCivil           MaritalStatus?
   ocupacion             String?
   telefonoPrincipal     String

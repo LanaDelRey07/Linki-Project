@@ -6,7 +6,6 @@ export declare class PatientService {
         identification: {
             id: string;
             createdAt: Date;
-            departamento: import(".prisma/client").$Enums.Department;
             updatedAt: Date;
             patientProfileId: string;
             nombres: string;
@@ -25,6 +24,7 @@ export declare class PatientService {
             correoElectronico: string;
             direccion: string;
             ciudad: string;
+            departamento: import(".prisma/client").$Enums.Department;
         } | null;
         emergencyContacts: {
             id: string;
@@ -46,14 +46,14 @@ export declare class PatientService {
                 id: string;
                 createdAt: Date;
                 backgroundId: string;
-                detalleOtra: string | null;
                 tipo: import(".prisma/client").$Enums.ChronicConditionType;
+                detalleOtra: string | null;
             }[];
             medications: {
                 id: string;
                 createdAt: Date;
-                nombre: string;
                 backgroundId: string;
+                nombre: string;
                 dosis: string;
                 frecuencia: string | null;
             }[];
@@ -76,8 +76,8 @@ export declare class PatientService {
                 createdAt: Date;
                 parentesco: import(".prisma/client").$Enums.FamilyRelation;
                 backgroundId: string;
-                enfermedad: import(".prisma/client").$Enums.FamilyDisease;
                 detalleOtra: string | null;
+                enfermedad: import(".prisma/client").$Enums.FamilyDisease;
             }[];
         } & {
             id: string;
@@ -106,26 +106,25 @@ export declare class PatientService {
         }) | null;
     } & {
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         userId: string;
         onboardingCompleted: boolean;
         currentStep: number;
         completedSteps: number[];
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     createOrGetProfile(userId: string): Promise<{
         id: string;
-        createdAt: Date;
-        updatedAt: Date;
         userId: string;
         onboardingCompleted: boolean;
         currentStep: number;
         completedSteps: number[];
+        createdAt: Date;
+        updatedAt: Date;
     }>;
     saveStep1(userId: string, dto: any): Promise<{
         id: string;
         createdAt: Date;
-        departamento: import(".prisma/client").$Enums.Department;
         updatedAt: Date;
         patientProfileId: string;
         nombres: string;
@@ -144,6 +143,7 @@ export declare class PatientService {
         correoElectronico: string;
         direccion: string;
         ciudad: string;
+        departamento: import(".prisma/client").$Enums.Department;
     }>;
     saveStep2(userId: string, dto: any): Promise<{
         id: string;
@@ -165,14 +165,14 @@ export declare class PatientService {
             id: string;
             createdAt: Date;
             backgroundId: string;
-            detalleOtra: string | null;
             tipo: import(".prisma/client").$Enums.ChronicConditionType;
+            detalleOtra: string | null;
         }[];
         medications: {
             id: string;
             createdAt: Date;
-            nombre: string;
             backgroundId: string;
+            nombre: string;
             dosis: string;
             frecuencia: string | null;
         }[];
@@ -220,8 +220,8 @@ export declare class PatientService {
         createdAt: Date;
         parentesco: import(".prisma/client").$Enums.FamilyRelation;
         backgroundId: string;
-        enfermedad: import(".prisma/client").$Enums.FamilyDisease;
         detalleOtra: string | null;
+        enfermedad: import(".prisma/client").$Enums.FamilyDisease;
     }[]>;
     saveStep5(userId: string, dto: any): Promise<{
         tabaquismo: any;

@@ -76,7 +76,6 @@ let PatientService = class PatientService {
             extensionDepartamento: dto.extensionDepartamento ?? undefined,
             fechaNacimiento: new Date(dto.fechaNacimiento),
             sexoBiologico: dto.sexoBiologico,
-            genero: dto.genero,
             estadoCivil: dto.estadoCivil,
             ocupacion: dto.ocupacion,
             telefonoPrincipal: dto.telefonoPrincipal,

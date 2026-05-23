@@ -10,6 +10,10 @@ export declare class PatientController {
     constructor(patientService: PatientService);
     getProfile(userId: string): Promise<{
         identification: {
+            id: string;
+            createdAt: Date;
+            updatedAt: Date;
+            patientProfileId: string;
             nombres: string;
             apellidoPaterno: string;
             apellidoMaterno: string | null;
@@ -18,6 +22,7 @@ export declare class PatientController {
             extensionDepartamento: import(".prisma/client").$Enums.Department | null;
             fechaNacimiento: Date;
             sexoBiologico: import(".prisma/client").$Enums.SexBiological;
+            genero: import(".prisma/client").$Enums.GenderIdentity | null;
             estadoCivil: import(".prisma/client").$Enums.MaritalStatus | null;
             ocupacion: string | null;
             telefonoPrincipal: string;
@@ -26,11 +31,6 @@ export declare class PatientController {
             direccion: string;
             ciudad: string;
             departamento: import(".prisma/client").$Enums.Department;
-            id: string;
-            createdAt: Date;
-            updatedAt: Date;
-            patientProfileId: string;
-            genero: import(".prisma/client").$Enums.GenderIdentity | null;
         } | null;
         emergencyContacts: {
             id: string;
@@ -52,8 +52,8 @@ export declare class PatientController {
                 id: string;
                 createdAt: Date;
                 backgroundId: string;
-                detalleOtra: string | null;
                 tipo: import(".prisma/client").$Enums.ChronicConditionType;
+                detalleOtra: string | null;
             }[];
             medications: {
                 id: string;
@@ -82,8 +82,8 @@ export declare class PatientController {
                 createdAt: Date;
                 parentesco: import(".prisma/client").$Enums.FamilyRelation;
                 backgroundId: string;
-                enfermedad: import(".prisma/client").$Enums.FamilyDisease;
                 detalleOtra: string | null;
+                enfermedad: import(".prisma/client").$Enums.FamilyDisease;
             }[];
         } & {
             id: string;
@@ -120,6 +120,10 @@ export declare class PatientController {
         updatedAt: Date;
     }>;
     saveStep1(userId: string, dto: CreateStep1Dto): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        patientProfileId: string;
         nombres: string;
         apellidoPaterno: string;
         apellidoMaterno: string | null;
@@ -128,6 +132,7 @@ export declare class PatientController {
         extensionDepartamento: import(".prisma/client").$Enums.Department | null;
         fechaNacimiento: Date;
         sexoBiologico: import(".prisma/client").$Enums.SexBiological;
+        genero: import(".prisma/client").$Enums.GenderIdentity | null;
         estadoCivil: import(".prisma/client").$Enums.MaritalStatus | null;
         ocupacion: string | null;
         telefonoPrincipal: string;
@@ -136,13 +141,12 @@ export declare class PatientController {
         direccion: string;
         ciudad: string;
         departamento: import(".prisma/client").$Enums.Department;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        patientProfileId: string;
-        genero: import(".prisma/client").$Enums.GenderIdentity | null;
     }>;
     updateStep1(userId: string, dto: CreateStep1Dto): Promise<{
+        id: string;
+        createdAt: Date;
+        updatedAt: Date;
+        patientProfileId: string;
         nombres: string;
         apellidoPaterno: string;
         apellidoMaterno: string | null;
@@ -151,6 +155,7 @@ export declare class PatientController {
         extensionDepartamento: import(".prisma/client").$Enums.Department | null;
         fechaNacimiento: Date;
         sexoBiologico: import(".prisma/client").$Enums.SexBiological;
+        genero: import(".prisma/client").$Enums.GenderIdentity | null;
         estadoCivil: import(".prisma/client").$Enums.MaritalStatus | null;
         ocupacion: string | null;
         telefonoPrincipal: string;
@@ -159,11 +164,6 @@ export declare class PatientController {
         direccion: string;
         ciudad: string;
         departamento: import(".prisma/client").$Enums.Department;
-        id: string;
-        createdAt: Date;
-        updatedAt: Date;
-        patientProfileId: string;
-        genero: import(".prisma/client").$Enums.GenderIdentity | null;
     }>;
     saveStep2(userId: string, dto: CreateStep2Dto): Promise<{
         id: string;
@@ -185,8 +185,8 @@ export declare class PatientController {
             id: string;
             createdAt: Date;
             backgroundId: string;
-            detalleOtra: string | null;
             tipo: import(".prisma/client").$Enums.ChronicConditionType;
+            detalleOtra: string | null;
         }[];
         medications: {
             id: string;
@@ -247,8 +247,8 @@ export declare class PatientController {
             id: string;
             createdAt: Date;
             backgroundId: string;
-            detalleOtra: string | null;
             tipo: import(".prisma/client").$Enums.ChronicConditionType;
+            detalleOtra: string | null;
         }[];
         medications: {
             id: string;
@@ -302,8 +302,8 @@ export declare class PatientController {
         createdAt: Date;
         parentesco: import(".prisma/client").$Enums.FamilyRelation;
         backgroundId: string;
-        enfermedad: import(".prisma/client").$Enums.FamilyDisease;
         detalleOtra: string | null;
+        enfermedad: import(".prisma/client").$Enums.FamilyDisease;
     }[]>;
     saveStep5(userId: string, dto: CreateStep5Dto): Promise<{
         tabaquismo: any;
