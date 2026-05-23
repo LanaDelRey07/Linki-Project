@@ -4,11 +4,9 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { RolesGuard } from './guards/roles.guard';
-import { PrismaModule } from '../prisma/prisma.module';
 
 @Module({
   imports: [
-    PrismaModule,
     JwtModule.register({
       secret: process.env.JWT_SECRET || 'linki_jwt_secret_dev_2026',
       signOptions: { expiresIn: '15m' },

@@ -3,49 +3,63 @@ import {
   UnauthorizedException,
   ConflictException,
 } from '@nestjs/common';
+import { randomUUID } from 'node:crypto';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
-import { PrismaService } from '../prisma/prisma.service';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { AuthResponseDto } from './dto/auth-response.dto';
 
 @Injectable()
 export class AuthService {
-  constructor(
-    private prisma: PrismaService,
-    private jwtService: JwtService,
-  ) {}
+  private users = new Map<string, {
+    id: string;
+    email: string;
+    passwordHash: string;
+    roles: { role: string }[];
+    isActive: boolean;
+    emailVerifiedAt: Date | null;
+  }>();
+
+  private sessionUsers = new Map<string, {
+    id: string;
+    email: string;
+    roles: { role: string }[];
+    isActive: boolean;
+  }>();
+
+  constructor(private jwtService: JwtService) {}
 
   async register(dto: RegisterDto): Promise<AuthResponseDto> {
-    const existing = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-    });
-    if (existing) {
+    if (this.users.has(dto.email)) {
       throw new ConflictException('El correo ya está registrado');
     }
 
     const passwordHash = await bcrypt.hash(dto.password, 10);
 
-    const user = await this.prisma.user.create({
-      data: {
-        email: dto.email,
-        passwordHash,
-        roles: {
-          create: { role: dto.role },
-        },
-      },
-      include: { roles: true },
+    const user = {
+      id: randomUUID(),
+      email: dto.email,
+      passwordHash,
+      roles: [{ role: dto.role }],
+      isActive: true,
+      emailVerifiedAt: null,
+    };
+
+    this.users.set(dto.email, user);
+
+    this.sessionUsers.set(user.id, {
+      id: user.id,
+      email: user.email,
+      roles: user.roles,
+      isActive: user.isActive,
     });
 
     return this.generateTokens(user.id, user.email, user.roles);
   }
 
   async login(dto: LoginDto): Promise<AuthResponseDto> {
-    const user = await this.prisma.user.findUnique({
-      where: { email: dto.email },
-      include: { roles: true },
-    });
+    const user = this.users.get(dto.email);
 
     if (!user || !(await bcrypt.compare(dto.password, user.passwordHash))) {
       throw new UnauthorizedException('Credenciales inválidas');
@@ -55,9 +69,16 @@ export class AuthService {
       throw new UnauthorizedException('Cuenta desactivada');
     }
 
-    await this.prisma.user.update({
-      where: { id: user.id },
-      data: { emailVerifiedAt: user.emailVerifiedAt ?? new Date() },
+    if (!user.emailVerifiedAt) {
+      user.emailVerifiedAt = new Date();
+      this.users.set(user.email, user);
+    }
+
+    this.sessionUsers.set(user.id, {
+      id: user.id,
+      email: user.email,
+      roles: user.roles,
+      isActive: user.isActive,
     });
 
     return this.generateTokens(user.id, user.email, user.roles);
@@ -69,10 +90,8 @@ export class AuthService {
         secret: process.env.JWT_SECRET,
       });
 
-      const user = await this.prisma.user.findUnique({
-        where: { id: payload.sub },
-        include: { roles: true },
-      });
+      const user = this.sessionUsers.get(payload.sub)
+        || [...this.users.values()].find((entry) => entry.id === payload.sub);
 
       if (!user || !user.isActive) {
         throw new UnauthorizedException();

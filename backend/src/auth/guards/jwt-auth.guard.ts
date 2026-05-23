@@ -1,4 +1,9 @@
-import { Injectable, CanActivate, ExecutionContext } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
@@ -10,7 +15,7 @@ export class JwtAuthGuard implements CanActivate {
     const authHeader = request.headers.authorization;
 
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return false;
+      throw new UnauthorizedException('Token no proporcionado');
     }
 
     const token = authHeader.split(' ')[1];
@@ -28,7 +33,7 @@ export class JwtAuthGuard implements CanActivate {
 
       return true;
     } catch {
-      return false;
+      throw new UnauthorizedException('Token inválido');
     }
   }
 }

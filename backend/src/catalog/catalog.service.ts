@@ -1,82 +1,70 @@
 import { Injectable } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { cie10Codes } from '../../prisma/seed/cie10.seed';
+import { medications } from '../../prisma/seed/medications.seed';
+import { cities } from '../../prisma/seed/cities.seed';
+import { labStudies, imagingStudies } from '../../prisma/seed/studies.seed';
+import { specialties } from '../../prisma/seed/specialties.seed';
 
 @Injectable()
 export class CatalogService {
-  constructor(private prisma: PrismaService) {}
-
   async searchCie10(search: string, limit = 20) {
-    return this.prisma.cie10Code.findMany({
-      where: {
-        isActive: true,
-        OR: [
-          { code: { contains: search, mode: 'insensitive' } },
-          { descriptionEs: { contains: search, mode: 'insensitive' } },
-        ],
-      },
-      take: limit,
-      select: {
-        id: true,
-        code: true,
-        descriptionEs: true,
-        category: true,
-      },
-    });
+    const query = (search || '').toLowerCase();
+    return cie10Codes
+      .filter((entry) =>
+        entry.code.toLowerCase().includes(query)
+        || entry.descriptionEs.toLowerCase().includes(query),
+      )
+      .slice(0, limit)
+      .map((entry) => ({
+        id: entry.id,
+        code: entry.code,
+        descriptionEs: entry.descriptionEs,
+        category: entry.category ?? null,
+      }));
   }
 
   async searchMedications(search: string, limit = 20) {
-    return this.prisma.medicationsCatalog.findMany({
-      where: {
-        isActive: true,
-        OR: [
-          { nombreGenerico: { contains: search, mode: 'insensitive' } },
-          { nombreComercial: { contains: search, mode: 'insensitive' } },
-        ],
-      },
-      take: limit,
-    });
+    const query = (search || '').toLowerCase();
+    return medications
+      .filter((entry) =>
+        entry.nombreGenerico.toLowerCase().includes(query)
+        || (entry.nombreComercial ?? '').toLowerCase().includes(query),
+      )
+      .slice(0, limit);
   }
 
   async getCitiesByDepartment(department: string) {
-    return this.prisma.boliviaCity.findMany({
-      where: { departamento: department as any, isActive: true },
-      orderBy: { nombre: 'asc' },
-    });
+    return cities
+      .filter((entry) => entry.departamento === department)
+      .slice()
+      .sort((a, b) => a.nombre.localeCompare(b.nombre));
   }
 
   async getAllDepartments() {
-    return this.prisma.boliviaCity.findMany({
-      where: { isActive: true },
-      distinct: ['departamento'],
-      select: { departamento: true },
-      orderBy: { departamento: 'asc' },
-    });
+    const seen = new Set<string>();
+    cities.forEach((entry) => seen.add(entry.departamento));
+    return Array.from(seen)
+      .sort((a, b) => a.localeCompare(b))
+      .map((departamento) => ({ departamento }));
   }
 
   async getSpecialties() {
-    return this.prisma.medicalSpecialty.findMany({
-      where: { isActive: true },
-      orderBy: { name: 'asc' },
-    });
+    return specialties
+      .slice()
+      .sort((a, b) => a.name.localeCompare(b.name));
   }
 
   async searchLabStudies(search: string, limit = 20) {
-    return this.prisma.labStudiesCatalog.findMany({
-      where: {
-        isActive: true,
-        nombre: { contains: search, mode: 'insensitive' },
-      },
-      take: limit,
-    });
+    const query = (search || '').toLowerCase();
+    return labStudies
+      .filter((entry) => entry.nombre.toLowerCase().includes(query))
+      .slice(0, limit);
   }
 
   async searchImagingStudies(search: string, limit = 20) {
-    return this.prisma.imagingStudiesCatalog.findMany({
-      where: {
-        isActive: true,
-        nombre: { contains: search, mode: 'insensitive' },
-      },
-      take: limit,
-    });
+    const query = (search || '').toLowerCase();
+    return imagingStudies
+      .filter((entry) => entry.nombre.toLowerCase().includes(query))
+      .slice(0, limit);
   }
 }

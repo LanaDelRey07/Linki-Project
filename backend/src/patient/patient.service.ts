@@ -4,48 +4,130 @@ import {
   ConflictException,
   BadRequestException,
 } from '@nestjs/common';
-import { PrismaService } from '../prisma/prisma.service';
+import { randomUUID } from 'node:crypto';
+
+type RoleAssignment = { role: string };
+
+interface PatientIdentificationRecord {
+  id: string;
+  patientProfileId: string;
+  nombres: string;
+  apellidoPaterno: string;
+  apellidoMaterno?: string;
+  tipoDocumento: string;
+  numeroDocumento: string;
+  extensionDepartamento?: string;
+  fechaNacimiento: string;
+  sexoBiologico: string;
+  estadoCivil?: string;
+  ocupacion?: string;
+  telefonoPrincipal: string;
+  telefonoSecundario?: string;
+  correoElectronico: string;
+  direccion: string;
+  ciudad: string;
+  departamento: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+interface EmergencyContactRecord {
+  id: string;
+  patientProfileId: string;
+  nombreCompleto: string;
+  parentesco: string;
+  telefono: string;
+  createdAt: string;
+}
+
+interface PatientBackgroundRecord {
+  id: string;
+  patientProfileId: string;
+  tieneAlergias: string;
+  tieneEnfermedadesCronicas: string;
+  tomaMedicamentos: boolean;
+  haSidoOperado: boolean;
+  haSidoHospitalizado: boolean;
+  tieneAntecedentesFamiliares: boolean;
+  tabaquismo?: string;
+  consumoAlcohol?: string;
+  actividadFisica?: string;
+  consumeOtrasSustancias?: boolean;
+  detalleOtrasSustancias?: string;
+  actualmenteEmbarazada?: string;
+  gestas?: number;
+  partos?: number;
+  cesareas?: number;
+  abortos?: number;
+  fechaUltimaMenstruacion?: string;
+  metodoAnticonceptivo?: string;
+  otroMetodoAnticonceptivo?: string;
+  createdAt: string;
+  updatedAt: string;
+  allergies: { id: string; tipoAlergia: string; detalle: string }[];
+  chronicConditions: { id: string; tipo: string; detalleOtra?: string }[];
+  medications: { id: string; nombre: string; dosis: string; frecuencia?: string }[];
+  surgeries: { id: string; tipoCirugia: string; anoAproximado?: number }[];
+  hospitalizations: { id: string; motivo: string; anoAproximado?: number }[];
+  familyHistory: { id: string; parentesco: string; enfermedad: string; detalleOtra?: string }[];
+}
+
+interface PatientBackgroundVersionRecord {
+  id: string;
+  patientProfileId: string;
+  versionNumber: number;
+  snapshotData: any;
+  changeDescription?: string;
+  changedFields: string[];
+  changedAt: string;
+}
+
+interface PatientProfileRecord {
+  id: string;
+  userId: string;
+  onboardingCompleted: boolean;
+  currentStep: number;
+  completedSteps: number[];
+  createdAt: string;
+  updatedAt: string;
+  identification?: PatientIdentificationRecord;
+  emergencyContacts: EmergencyContactRecord[];
+  background?: PatientBackgroundRecord;
+  backgroundVersions: PatientBackgroundVersionRecord[];
+}
 
 @Injectable()
 export class PatientService {
-  constructor(private prisma: PrismaService) {}
+  private profiles = new Map<string, PatientProfileRecord>();
+  private documentsIndex = new Map<string, string>();
 
   async getProfile(userId: string) {
-    const profile = await this.prisma.patientProfile.findUnique({
-      where: { userId },
-      include: {
-        identification: true,
-        emergencyContacts: true,
-        background: {
-          include: {
-            allergies: true,
-            chronicConditions: true,
-            medications: true,
-            surgeries: true,
-            hospitalizations: true,
-            familyHistory: true,
-          },
-        },
-      },
-    });
-
+    const profile = this.profiles.get(userId);
     if (!profile) {
       throw new NotFoundException('Perfil de paciente no encontrado');
     }
-
     return profile;
   }
 
   async createOrGetProfile(userId: string) {
-    let profile = await this.prisma.patientProfile.findUnique({
-      where: { userId },
-    });
+    const existing = this.profiles.get(userId);
+    if (existing) return existing;
 
-    if (profile) return profile;
+    const now = new Date().toISOString();
+    const profile: PatientProfileRecord = {
+      id: randomUUID(),
+      userId,
+      onboardingCompleted: false,
+      currentStep: 1,
+      completedSteps: [],
+      createdAt: now,
+      updatedAt: now,
+      emergencyContacts: [],
+      backgroundVersions: [],
+    };
 
-    return this.prisma.patientProfile.create({
-      data: { userId },
-    });
+    this.profiles.set(userId, profile);
+    return profile;
   }
 
   async saveStep1(userId: string, dto: any) {
@@ -55,20 +137,22 @@ export class PatientService {
       throw new BadRequestException('La extensión departamental es obligatoria para CI');
     }
 
-    const existing = await this.prisma.patientIdentification.findUnique({
-      where: { tipoDocumento_numeroDocumento: { tipoDocumento: dto.tipoDocumento, numeroDocumento: dto.numeroDocumento } },
-    });
+    const documentKey = `${dto.tipoDocumento}:${dto.numeroDocumento}`;
+    const existingOwnerId = this.documentsIndex.get(documentKey);
+    if (existingOwnerId && existingOwnerId !== userId) {
+      throw new ConflictException('Este documento ya está registrado');
+    }
 
-    if (existing) {
-      const existingProfile = await this.prisma.patientIdentification.findUnique({
-        where: { patientProfileId: profile.id },
-      });
-      if (existingProfile && existingProfile.id !== existing.id) {
-        throw new ConflictException('Este documento ya está registrado');
+    if (profile.identification) {
+      const previousKey = `${profile.identification.tipoDocumento}:${profile.identification.numeroDocumento}`;
+      if (previousKey !== documentKey) {
+        this.documentsIndex.delete(previousKey);
       }
     }
 
-    const data = {
+    const now = new Date().toISOString();
+    const identification: PatientIdentificationRecord = {
+      id: profile.identification?.id ?? randomUUID(),
       patientProfileId: profile.id,
       nombres: dto.nombres,
       apellidoPaterno: dto.apellidoPaterno,
@@ -76,7 +160,7 @@ export class PatientService {
       tipoDocumento: dto.tipoDocumento,
       numeroDocumento: dto.numeroDocumento,
       extensionDepartamento: dto.extensionDepartamento ?? undefined,
-      fechaNacimiento: new Date(dto.fechaNacimiento),
+      fechaNacimiento: dto.fechaNacimiento,
       sexoBiologico: dto.sexoBiologico,
       estadoCivil: dto.estadoCivil,
       ocupacion: dto.ocupacion,
@@ -86,13 +170,13 @@ export class PatientService {
       direccion: dto.direccion,
       ciudad: dto.ciudad,
       departamento: dto.departamento,
+      createdAt: profile.identification?.createdAt ?? now,
+      updatedAt: now,
     };
 
-    const identification = await this.prisma.patientIdentification.upsert({
-      where: { patientProfileId: profile.id },
-      update: data,
-      create: data,
-    });
+    profile.identification = identification;
+    profile.updatedAt = now;
+    this.documentsIndex.set(documentKey, userId);
 
     await this.updateStepProgress(profile.id, 1);
 
@@ -102,266 +186,264 @@ export class PatientService {
   async saveStep2(userId: string, dto: any) {
     const profile = await this.getProfileOrFail(userId);
 
-    await this.prisma.emergencyContact.deleteMany({
-      where: { patientProfileId: profile.id },
-    });
+    const now = new Date().toISOString();
+    profile.emergencyContacts = dto.contacts.map((contact: any) => ({
+      id: randomUUID(),
+      patientProfileId: profile.id,
+      nombreCompleto: contact.nombreCompleto,
+      parentesco: contact.parentesco,
+      telefono: contact.telefono,
+      createdAt: now,
+    }));
 
-    const contacts = await this.prisma.emergencyContact.createMany({
-      data: dto.contacts.map((c: any) => ({
-        patientProfileId: profile.id,
-        ...c,
-      })),
-    });
-
+    profile.updatedAt = now;
     await this.updateStepProgress(profile.id, 2);
 
-    return this.prisma.emergencyContact.findMany({
-      where: { patientProfileId: profile.id },
-    });
+    return profile.emergencyContacts;
   }
 
   async saveStep3(userId: string, dto: any) {
     const profile = await this.getProfileOrFail(userId);
+    const now = new Date().toISOString();
 
-    const background = await this.prisma.patientBackground.upsert({
-      where: { patientProfileId: profile.id },
-      update: {
-        tieneAlergias: dto.tieneAlergias,
-        tieneEnfermedadesCronicas: dto.tieneEnfermedadesCronicas,
-        tomaMedicamentos: dto.tomaMedicamentos,
-        haSidoOperado: dto.haSidoOperado,
-        haSidoHospitalizado: dto.haSidoHospitalizado ?? false,
-      },
-      create: {
-        patientProfileId: profile.id,
-        tieneAlergias: dto.tieneAlergias,
-        tieneEnfermedadesCronicas: dto.tieneEnfermedadesCronicas,
-        tomaMedicamentos: dto.tomaMedicamentos,
-        haSidoOperado: dto.haSidoOperado,
-        haSidoHospitalizado: dto.haSidoHospitalizado ?? false,
-      },
-    });
+    const background: PatientBackgroundRecord = profile.background ?? {
+      id: randomUUID(),
+      patientProfileId: profile.id,
+      tieneAntecedentesFamiliares: false,
+      allergies: [],
+      chronicConditions: [],
+      medications: [],
+      surgeries: [],
+      hospitalizations: [],
+      familyHistory: [],
+      createdAt: now,
+      updatedAt: now,
+      tieneAlergias: 'NO',
+      tieneEnfermedadesCronicas: 'NO',
+      tomaMedicamentos: false,
+      haSidoOperado: false,
+      haSidoHospitalizado: false,
+    };
 
-    await this.prisma.patientAllergy.deleteMany({ where: { backgroundId: background.id } });
-    await this.prisma.patientChronicCondition.deleteMany({ where: { backgroundId: background.id } });
-    await this.prisma.patientMedication.deleteMany({ where: { backgroundId: background.id } });
-    await this.prisma.patientSurgery.deleteMany({ where: { backgroundId: background.id } });
-    await this.prisma.patientHospitalization.deleteMany({ where: { backgroundId: background.id } });
+    background.tieneAlergias = dto.tieneAlergias;
+    background.tieneEnfermedadesCronicas = dto.tieneEnfermedadesCronicas;
+    background.tomaMedicamentos = dto.tomaMedicamentos;
+    background.haSidoOperado = dto.haSidoOperado;
+    background.haSidoHospitalizado = dto.haSidoHospitalizado ?? false;
+    background.updatedAt = now;
 
-    if (dto.allergies && dto.allergies.length > 0) {
-      await this.prisma.patientAllergy.createMany({
-        data: dto.allergies.map((a: any) => ({ backgroundId: background.id, ...a })),
-      });
-    }
+    background.allergies = (dto.allergies ?? []).map((allergy: any) => ({
+      id: randomUUID(),
+      tipoAlergia: allergy.tipoAlergia,
+      detalle: allergy.detalle,
+    }));
 
-    if (dto.chronicConditions && dto.chronicConditions.length > 0) {
-      await this.prisma.patientChronicCondition.createMany({
-        data: dto.chronicConditions.map((c: any) => ({ backgroundId: background.id, ...c })),
-      });
-    }
+    background.chronicConditions = (dto.chronicConditions ?? []).map((condition: any) => ({
+      id: randomUUID(),
+      tipo: condition.tipo,
+      detalleOtra: condition.detalleOtra,
+    }));
 
-    if (dto.medications && dto.medications.length > 0) {
-      await this.prisma.patientMedication.createMany({
-        data: dto.medications.map((m: any) => ({ backgroundId: background.id, ...m })),
-      });
-    }
+    background.medications = (dto.medications ?? []).map((medication: any) => ({
+      id: randomUUID(),
+      nombre: medication.nombre,
+      dosis: medication.dosis,
+      frecuencia: medication.frecuencia,
+    }));
 
-    if (dto.surgeries && dto.surgeries.length > 0) {
-      await this.prisma.patientSurgery.createMany({
-        data: dto.surgeries.map((s: any) => ({ backgroundId: background.id, ...s })),
-      });
-    }
+    background.surgeries = (dto.surgeries ?? []).map((surgery: any) => ({
+      id: randomUUID(),
+      tipoCirugia: surgery.tipoCirugia,
+      anoAproximado: surgery.anoAproximado,
+    }));
 
-    if (dto.hospitalizations && dto.hospitalizations.length > 0) {
-      await this.prisma.patientHospitalization.createMany({
-        data: dto.hospitalizations.map((h: any) => ({ backgroundId: background.id, ...h })),
-      });
-    }
+    background.hospitalizations = (dto.hospitalizations ?? []).map((hospitalization: any) => ({
+      id: randomUUID(),
+      motivo: hospitalization.motivo,
+      anoAproximado: hospitalization.anoAproximado,
+    }));
+
+    profile.background = background;
+    profile.updatedAt = now;
 
     await this.updateStepProgress(profile.id, 3);
 
-    return this.prisma.patientBackground.findUnique({
-      where: { id: background.id },
-      include: {
-        allergies: true,
-        chronicConditions: true,
-        medications: true,
-        surgeries: true,
-        hospitalizations: true,
-      },
-    });
+    return background;
   }
 
   async saveStep4(userId: string, dto: any) {
     const profile = await this.getProfileOrFail(userId);
+    const now = new Date().toISOString();
 
-    let background = await this.prisma.patientBackground.findUnique({
-      where: { patientProfileId: profile.id },
-    });
+    const background = profile.background ?? {
+      id: randomUUID(),
+      patientProfileId: profile.id,
+      tieneAlergias: 'NO',
+      tieneEnfermedadesCronicas: 'NO',
+      tomaMedicamentos: false,
+      haSidoOperado: false,
+      haSidoHospitalizado: false,
+      tieneAntecedentesFamiliares: false,
+      allergies: [],
+      chronicConditions: [],
+      medications: [],
+      surgeries: [],
+      hospitalizations: [],
+      familyHistory: [],
+      createdAt: now,
+      updatedAt: now,
+    };
 
-    if (!background) {
-      background = await this.prisma.patientBackground.create({
-        data: {
-          patientProfileId: profile.id,
-          tieneAlergias: 'NO',
-          tieneEnfermedadesCronicas: 'NO',
-          tomaMedicamentos: false,
-          haSidoOperado: false,
-          tieneAntecedentesFamiliares: dto.tieneAntecedentesFamiliares,
-        },
-      });
-    } else {
-      await this.prisma.patientBackground.update({
-        where: { id: background.id },
-        data: { tieneAntecedentesFamiliares: dto.tieneAntecedentesFamiliares },
-      });
-    }
+    background.tieneAntecedentesFamiliares = dto.tieneAntecedentesFamiliares;
+    background.familyHistory = (dto.familyHistory ?? []).map((entry: any) => ({
+      id: randomUUID(),
+      parentesco: entry.parentesco,
+      enfermedad: entry.enfermedad,
+      detalleOtra: entry.detalleOtra,
+    }));
+    background.updatedAt = now;
 
-    await this.prisma.patientFamilyHistory.deleteMany({ where: { backgroundId: background.id } });
-
-    if (dto.familyHistory && dto.familyHistory.length > 0) {
-      await this.prisma.patientFamilyHistory.createMany({
-        data: dto.familyHistory.map((f: any) => ({ backgroundId: background.id, ...f })),
-      });
-    }
+    profile.background = background;
+    profile.updatedAt = now;
 
     await this.updateStepProgress(profile.id, 4);
 
-    return this.prisma.patientFamilyHistory.findMany({ where: { backgroundId: background.id } });
+    return background.familyHistory;
   }
 
   async saveStep5(userId: string, dto: any) {
     const profile = await this.getProfileOrFail(userId);
+    const now = new Date().toISOString();
 
-    let background = await this.prisma.patientBackground.findUnique({
-      where: { patientProfileId: profile.id },
-    });
+    const background = profile.background ?? {
+      id: randomUUID(),
+      patientProfileId: profile.id,
+      tieneAlergias: 'NO',
+      tieneEnfermedadesCronicas: 'NO',
+      tomaMedicamentos: false,
+      haSidoOperado: false,
+      haSidoHospitalizado: false,
+      tieneAntecedentesFamiliares: false,
+      allergies: [],
+      chronicConditions: [],
+      medications: [],
+      surgeries: [],
+      hospitalizations: [],
+      familyHistory: [],
+      createdAt: now,
+      updatedAt: now,
+    };
 
-    if (!background) {
-      background = await this.prisma.patientBackground.create({
-        data: {
-          patientProfileId: profile.id,
-          tieneAlergias: 'NO',
-          tieneEnfermedadesCronicas: 'NO',
-          tomaMedicamentos: false,
-          haSidoOperado: false,
-          tabaquismo: dto.tabaquismo,
-          consumoAlcohol: dto.consumoAlcohol,
-          actividadFisica: dto.actividadFisica,
-          consumeOtrasSustancias: dto.consumeOtrasSustancias ?? false,
-          detalleOtrasSustancias: dto.detalleOtrasSustancias,
-        },
-      });
-    } else {
-      await this.prisma.patientBackground.update({
-        where: { id: background.id },
-        data: {
-          tabaquismo: dto.tabaquismo,
-          consumoAlcohol: dto.consumoAlcohol,
-          actividadFisica: dto.actividadFisica,
-          consumeOtrasSustancias: dto.consumeOtrasSustancias,
-          detalleOtrasSustancias: dto.detalleOtrasSustancias,
-        },
-      });
-    }
+    background.tabaquismo = dto.tabaquismo;
+    background.consumoAlcohol = dto.consumoAlcohol;
+    background.actividadFisica = dto.actividadFisica;
+    background.consumeOtrasSustancias = dto.consumeOtrasSustancias ?? false;
+    background.detalleOtrasSustancias = dto.detalleOtrasSustancias;
+    background.updatedAt = now;
+
+    profile.background = background;
+    profile.updatedAt = now;
 
     await this.updateStepProgress(profile.id, 5);
 
-    return { tabaquismo: dto.tabaquismo, consumoAlcohol: dto.consumoAlcohol, actividadFisica: dto.actividadFisica };
+    return {
+      tabaquismo: background.tabaquismo,
+      consumoAlcohol: background.consumoAlcohol,
+      actividadFisica: background.actividadFisica,
+    };
   }
 
   async saveStep6(userId: string, dto: any) {
     const profile = await this.getProfileOrFail(userId);
 
-    const identification = await this.prisma.patientIdentification.findUnique({
-      where: { patientProfileId: profile.id },
-    });
-
-    if (identification?.sexoBiologico !== 'FEMENINO') {
+    if (profile.identification?.sexoBiologico !== 'FEMENINO') {
       return { message: 'Paso 6 solo aplica para pacientes femeninas' };
     }
 
-    let background = await this.prisma.patientBackground.findUnique({
-      where: { patientProfileId: profile.id },
-    });
-
-    const gynecoData: any = {
-      actualmenteEmbarazada: dto.actualmenteEmbarazada,
-      gestas: dto.gestas,
-      partos: dto.partos,
-      cesareas: dto.cesareas,
-      abortos: dto.abortos,
-      fechaUltimaMenstruacion: dto.fechaUltimaMenstruacion ? new Date(dto.fechaUltimaMenstruacion) : undefined,
-      metodoAnticonceptivo: dto.metodoAnticonceptivo,
-      otroMetodoAnticonceptivo: dto.otroMetodoAnticonceptivo,
+    const now = new Date().toISOString();
+    const background = profile.background ?? {
+      id: randomUUID(),
+      patientProfileId: profile.id,
+      tieneAlergias: 'NO',
+      tieneEnfermedadesCronicas: 'NO',
+      tomaMedicamentos: false,
+      haSidoOperado: false,
+      haSidoHospitalizado: false,
+      tieneAntecedentesFamiliares: false,
+      allergies: [],
+      chronicConditions: [],
+      medications: [],
+      surgeries: [],
+      hospitalizations: [],
+      familyHistory: [],
+      createdAt: now,
+      updatedAt: now,
     };
 
-    if (!background) {
-      background = await this.prisma.patientBackground.create({
-        data: {
-          patientProfileId: profile.id,
-          tieneAlergias: 'NO',
-          tieneEnfermedadesCronicas: 'NO',
-          tomaMedicamentos: false,
-          haSidoOperado: false,
-          ...gynecoData,
-        },
-      });
-    } else {
-      await this.prisma.patientBackground.update({
-        where: { id: background.id },
-        data: gynecoData,
-      });
-    }
+    background.actualmenteEmbarazada = dto.actualmenteEmbarazada;
+    background.gestas = dto.gestas;
+    background.partos = dto.partos;
+    background.cesareas = dto.cesareas;
+    background.abortos = dto.abortos;
+    background.fechaUltimaMenstruacion = dto.fechaUltimaMenstruacion;
+    background.metodoAnticonceptivo = dto.metodoAnticonceptivo;
+    background.otroMetodoAnticonceptivo = dto.otroMetodoAnticonceptivo;
+    background.updatedAt = now;
+
+    profile.background = background;
+    profile.updatedAt = now;
 
     await this.updateStepProgress(profile.id, 6);
 
-    return gynecoData;
+    return {
+      actualmenteEmbarazada: background.actualmenteEmbarazada,
+      gestas: background.gestas,
+      partos: background.partos,
+      cesareas: background.cesareas,
+      abortos: background.abortos,
+      fechaUltimaMenstruacion: background.fechaUltimaMenstruacion,
+      metodoAnticonceptivo: background.metodoAnticonceptivo,
+      otroMetodoAnticonceptivo: background.otroMetodoAnticonceptivo,
+    };
   }
 
   async getVersions(userId: string) {
     const profile = await this.getProfileOrFail(userId);
-    return this.prisma.patientBackgroundVersion.findMany({
-      where: { patientProfileId: profile.id },
-      orderBy: { versionNumber: 'desc' },
-    });
+    return [...profile.backgroundVersions].sort((a, b) => b.versionNumber - a.versionNumber);
   }
 
   async getVersion(userId: string, versionNumber: number) {
     const profile = await this.getProfileOrFail(userId);
-    return this.prisma.patientBackgroundVersion.findFirst({
-      where: { patientProfileId: profile.id, versionNumber },
-    });
+    return profile.backgroundVersions.find((version) => version.versionNumber === Number(versionNumber));
   }
 
   async createBackgroundSnapshot(userId: string, changeDescription?: string) {
     const profile = await this.getProfileOrFail(userId);
     const fullData = await this.getProfile(userId);
-
-    const lastVersion = await this.prisma.patientBackgroundVersion.findFirst({
-      where: { patientProfileId: profile.id },
-      orderBy: { versionNumber: 'desc' },
-    });
+    const lastVersion = profile.backgroundVersions
+      .slice()
+      .sort((a, b) => b.versionNumber - a.versionNumber)[0];
 
     const versionNumber = (lastVersion?.versionNumber ?? 0) + 1;
+    const changedFields = this.detectChanges(lastVersion?.snapshotData, fullData);
+    const version: PatientBackgroundVersionRecord = {
+      id: randomUUID(),
+      patientProfileId: profile.id,
+      versionNumber,
+      snapshotData: fullData,
+      changeDescription: changeDescription || `Actualización v${versionNumber}`,
+      changedFields,
+      changedAt: new Date().toISOString(),
+    };
 
-    const changedFields = this.detectChanges(lastVersion?.snapshotData as any, fullData);
-
-    return this.prisma.patientBackgroundVersion.create({
-      data: {
-        patientProfileId: profile.id,
-        versionNumber,
-        snapshotData: fullData as any,
-        changeDescription: changeDescription || `Actualización v${versionNumber}`,
-        changedFields,
-      },
-    });
+    profile.backgroundVersions.push(version);
+    return version;
   }
 
   private detectChanges(previousData: any, currentData: any): string[] {
     if (!previousData) return ['INITIAL'];
     const changed: string[] = [];
-    const keys = Object.keys(currentData);
+    const keys = Object.keys(currentData || {});
     for (const key of keys) {
       if (JSON.stringify(previousData[key]) !== JSON.stringify(currentData[key])) {
         changed.push(key);
@@ -371,45 +453,30 @@ export class PatientService {
   }
 
   private async getProfileOrFail(userId: string) {
-    const profile = await this.prisma.patientProfile.findUnique({
-      where: { userId },
-    });
-
+    const profile = this.profiles.get(userId);
     if (!profile) {
       throw new NotFoundException('Perfil de paciente no encontrado. Complete el paso 1 primero.');
     }
-
     return profile;
   }
 
   private async updateStepProgress(profileId: string, step: number) {
-    const profile = await this.prisma.patientProfile.findUnique({
-      where: { id: profileId },
-    });
+    const profile = [...this.profiles.values()].find((entry) => entry.id === profileId);
+    if (!profile) return;
 
-    const completedSteps = [...(profile?.completedSteps as number[] || [])];
+    const completedSteps = [...profile.completedSteps];
     if (!completedSteps.includes(step)) {
       completedSteps.push(step);
     }
 
-    const onboardingCompleted = [1, 2, 3, 4, 5].every((s) =>
-      completedSteps.includes(s),
-    );
-
-    await this.prisma.patientProfile.update({
-      where: { id: profileId },
-      data: {
-        currentStep: step,
-        completedSteps,
-        onboardingCompleted,
-      },
-    });
+    const onboardingCompleted = [1, 2, 3, 4, 5].every((s) => completedSteps.includes(s));
+    profile.currentStep = step;
+    profile.completedSteps = completedSteps;
+    profile.onboardingCompleted = onboardingCompleted;
+    profile.updatedAt = new Date().toISOString();
 
     if (onboardingCompleted) {
-      const userId = profile?.userId;
-      if (userId) {
-        await this.createBackgroundSnapshot(userId, 'Onboarding completado');
-      }
+      await this.createBackgroundSnapshot(profile.userId, 'Onboarding completado');
     }
   }
 }
