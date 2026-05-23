@@ -23,52 +23,76 @@ export class PatientController {
   constructor(private patientService: PatientService) {}
 
   @Get('profile')
-  async getProfile(@CurrentUser('id') userId: string) {
+  async getProfile(@CurrentUser('id') userId: string): Promise<any> {
     return this.patientService.getProfile(userId);
   }
 
   @Post('profile/step-1')
-  async saveStep1(@CurrentUser('id') userId: string, @Body() dto: CreateStep1Dto) {
+  async saveStep1(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateStep1Dto,
+  ): Promise<any> {
     return this.patientService.saveStep1(userId, dto);
   }
 
   @Patch('profile/step-1')
-  async updateStep1(@CurrentUser('id') userId: string, @Body() dto: CreateStep1Dto) {
+  async updateStep1(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateStep1Dto,
+  ): Promise<any> {
     return this.patientService.saveStep1(userId, dto);
   }
 
   @Post('profile/step-2')
-  async saveStep2(@CurrentUser('id') userId: string, @Body() dto: CreateStep2Dto) {
+  async saveStep2(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateStep2Dto,
+  ): Promise<any> {
     return this.patientService.saveStep2(userId, dto);
   }
 
   @Post('profile/step-3')
-  async saveStep3(@CurrentUser('id') userId: string, @Body() dto: CreateStep3Dto) {
+  async saveStep3(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateStep3Dto,
+  ): Promise<any> {
     return this.patientService.saveStep3(userId, dto);
   }
 
   @Patch('profile/step-3')
-  async updateStep3(@CurrentUser('id') userId: string, @Body() dto: CreateStep3Dto) {
+  async updateStep3(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateStep3Dto,
+  ): Promise<any> {
     return this.patientService.saveStep3(userId, dto);
   }
 
   @Post('profile/step-4')
-  async saveStep4(@CurrentUser('id') userId: string, @Body() dto: CreateStep4Dto) {
+  async saveStep4(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateStep4Dto,
+  ): Promise<any> {
     return this.patientService.saveStep4(userId, dto);
   }
 
   @Post('profile/step-5')
-  async saveStep5(@CurrentUser('id') userId: string, @Body() dto: CreateStep5Dto) {
+  async saveStep5(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateStep5Dto,
+  ): Promise<any> {
     return this.patientService.saveStep5(userId, dto);
   }
 
   @Post('profile/step-6')
-  async saveStep6(@CurrentUser('id') userId: string, @Body() dto: CreateStep6Dto) {
+  async saveStep6(
+    @CurrentUser('id') userId: string,
+    @Body() dto: CreateStep6Dto,
+  ): Promise<any> {
     return this.patientService.saveStep6(userId, dto);
   }
 
   @Get('profile/versions')
-  async getVersions(@CurrentUser('id') userId: string) {
+  async getVersions(@CurrentUser('id') userId: string): Promise<any> {
     return this.patientService.getVersions(userId);
   }
 
@@ -76,7 +100,7 @@ export class PatientController {
   async getVersion(
     @CurrentUser('id') userId: string,
     @Param('versionNumber') versionNumber: number,
-  ) {
+  ): Promise<any> {
     return this.patientService.getVersion(userId, versionNumber);
   }
 }
